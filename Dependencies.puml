@@ -1,0 +1,145 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Car {
+    {field}-regNumber: string
+    {field}-producer: string
+    {field}-model: string
+    {field}-type: type
+
+    {method}+Car(string, string, string, string): Car
+    {method}+Car(const Car&): Car
+
+    {method}+getRegNumber() const: string
+    {method}+getProducer() const: string
+    {method}+getModel() const: string
+    {method}+getType() const: string
+
+    {method}+setRegNumber(const string&)
+    {method}+setProducer(const string&)
+    {method}+setModel(const string&)
+    {method}+setType(const string&)
+}
+
+class Validator {
+    {static}{method}+validateRegNumber(const Car&): bool
+    {static}{method}+validateProducer(const Car&): bool
+    {static}{method}+validateModel(const Car&): bool
+    {static}{method}+validateType(const Car&): bool
+    {static}{method}+validateCar(const Car&, const Repository&): bool
+}
+
+class Repository {
+    {field}-cars: carList
+
+    {method}+Repository() noexcept = default
+
+    {method}+getCars() const: const carList&
+    {method}+getSize() const noexcept: size_t
+
+    {method}+findCar(const string&) const: unsigned int
+    {method}+addCar(const Car&)
+    {method}+deleteCar(const string&): Car
+    {method}+modifyCar(const Car&): Car
+
+    {static}{method}+copyList(const carList&): carList
+}
+
+class Service {
+    {field}-carRepository: Repository
+
+    {method}+Service() noexcept = default
+
+    {method}+getCars() const = const carList&
+
+    {method}+addCarService(const string&, const string&, const string&, const string&): bool
+    {method}+modifyCarService(const string&, const string&, const string&, const string&): Car
+    {method}+deleteCarService(const string&): Car
+    {method}+findCarService(const string&): Car
+
+    {method}+findCarService(const string&): Car
+
+    {static}{method}+compareByProducer(const Car&, const Car&): bool
+    {static}{method}+compareByType(const Car&, const Car&): bool
+
+    {static}{method}+sortRegNumber(const carList&): carList
+    {static}{method}+sortType(const carList&): carList
+    {static}{method}+sortProducerModel(const carList&): carList
+}
+
+class UI {
+    {field}-carService: Service
+
+    {method}+UI() noexcept = default
+
+    {static}{method}+uiCommands()
+    {method}+uiShowCars() const
+    {method}+uiAddCar()
+    {method}+uiDeleteCar()
+    {method}+uiModifyCar()
+    {method}+uiFilterByProducer() const
+    {method}+uiFilterByType() const
+    {method}+uiSortRegNumber() const
+    {method}+uiSortType() const
+    {method}+uiSortProducerModel() const
+    {method}+uiRun()
+}
+
+class Node {
+    {field}-prev: Node<TElem>*
+    {field}-next: Node<TElem>*
+    {field}-data: TElem
+
+    {method}+Node(TElem, Node*, Node*): Node
+
+    {method}+getData() const: TElem
+    {method}+getPrev() const: Node*
+    {method}+getNext() const: Node*
+
+    {method}+setData(const TElem&)
+    {method}+setPrev(Node*)
+    {method}+setNext(Node*)
+}
+
+class LDI{
+    {field}-prim: Node<TElem>*
+    {field}-ultim: Node<TElem>*
+    {field}-sizeLDI: unsigned int
+
+    {method}-deleteNodes(Node*)
+
+    {method}+LDI<TElem>(): LDI
+
+    {method}+LDI<TElem>(const LDI<TElem>&): LDI
+    {method}+LDI<TElem>(LDI<TElem>&&): LDI
+
+    {method}+push_back(const TElem&)
+    {method}+at(unsigned int) const: TElem
+    {method}+erase(Node<TElem>*)
+    {method}+swap(const unsigned int&, const unsigned int&)
+
+    {method}+begin() const: IteratorLDI<TElem>
+    {method}+end() const: IteratorLDI<TElem>
+
+    ~LDI()
+}
+
+class IteratorLDI {
+    {field}-list: const LDI<TElem>&
+    {field}-current: Node<TElem>*
+
+    {method}+explicit IteratorLDI(const LDI&): IteratorLDI
+    {method}+(const LDI&, Node*): IteratorLDI
+
+    {method}+getCurrent(): Node<TElem>*
+}
+
+LDI <-- IteratorLDI
+LDI <-- Node
+Repository <-- LDI
+Repository <-- Car
+Validator <-- Repository
+Service <-- Validator
+UI <-- Service
+
+@enduml
