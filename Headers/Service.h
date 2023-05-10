@@ -129,7 +129,7 @@ public:
      * @pre true
      * @post Se genereaza lista random de masini de spalat
      */
-    void randomWashingList(unsigned int, const vector<Car> &);
+    void randomWashingList(int, const vector<Car> &);
 
     // counting all the models using UM
     [[nodiscard]] unordered_map<string, DTO> countModels() const;
@@ -139,7 +139,7 @@ public:
      * @param fileName: numele fisierului unde se face export-ul
      * @exception Nu se poate deschide fisierul
      */
-    void exportToFile(const string &fileName);
+    void exportToFile(const string &, const string &);
 
     /**
      * @brief Functie de undo. Reinstaureaza starea dinaintea unei adaugari, stergeri sau modificari

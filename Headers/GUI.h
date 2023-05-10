@@ -10,6 +10,7 @@
 #include <QLayout>
 #include <QFormLayout>
 #include <QGroupBox>
+#include <QComboBox>
 
 #include <QRadioButton>
 #include <QPushButton>
@@ -35,59 +36,65 @@ private:
     // declaring the components that the main app window should contain
 
     // the main layout -> this contains all the elements that the windows has ( a wrapper )
-    QLayout *mainLayout{};
+    QLayout *mainLayout = new QHBoxLayout;
 
     // the washing window -> will show only the current cars in the washing list
-    QWidget *washWindow{};
-    QLayout *washWindowLayout{};
-    QTableWidget *tableWash{};
+    QWidget *washWindow = new QWidget;
+    QLayout *washWindowLayout = new QVBoxLayout;
+    QTableWidget *tableWash = new QTableWidget;
 
     // the cars list ( left part of the GUI )
-    QTableWidget *tableCars{};
+    QTableWidget *tableCars = new QTableWidget;
 
     // ( right part of the GUI )
     // Group Boxes -> arranging the commands in some way
-    QGroupBox *commandsBox{};     // for grouping all the commands
-    QGroupBox *operationsBox{};   // for grouping the basic commands
-    QGroupBox *filterBox{};       // for grouping the filter options
-    QGroupBox *sortBox{};         // for grouping the sort options
-    QGroupBox *washBox{};         // for grouping the washing list options
-    QGroupBox *otherBox{};        // for grouping other commands
+    QGroupBox *commandsBox = new QGroupBox("Commands");;     // for grouping all the commands
+    QGroupBox *operationsBox = new QGroupBox("Operations");   // for grouping the basic commands
+    QGroupBox *filterBox = new QGroupBox("Filter");       // for grouping the filter options
+    QGroupBox *sortBox = new QGroupBox("Sort");         // for grouping the sort options
+    QGroupBox *washBox = new QGroupBox("Wash");         // for grouping the washing list options
+    QGroupBox *otherBox = new QGroupBox("Others");        // for grouping other commands
 
     // Buttons -> for interaction between the user and the app
-    QPushButton *btnAdd{};        // for adding a car
-    QPushButton *btnDelete{};     // for deleting a car
-    QPushButton *btnModify{};     // for modifying a car
-    QPushButton *btnFind{};       // for finding a car
+    QPushButton *btnAdd = new QPushButton("&Add");        // for adding a car
+    QPushButton *btnDelete = new QPushButton("&Delete");     // for deleting a car
+    QPushButton *btnModify = new QPushButton("&Modify");     // for modifying a car
+    QPushButton *btnFind = new QPushButton("&Find");      // for finding a car
 
-    QRadioButton *radioFilterProducer{}; // for filtering by the producer
-    QRadioButton *radioFilterType{};     // for filtering by the type
-    QLineEdit *filterCriteria{};         // the element on which we will filter
-    QPushButton *btnFilter{};           // for filtering
+    QRadioButton *radioFilterProducer = new QRadioButton("By producer");; // for filtering by the producer
+    QRadioButton *radioFilterType = new QRadioButton("By type");     // for filtering by the type
+    QLineEdit *filterCriteria = new QLineEdit;        // the element on which we will filter
+    QPushButton *btnFilter = new QPushButton("&Filter");          // for filtering
 
-    QRadioButton *radioSortRegNumber{};  // for sorting by the registration number
-    QRadioButton *radioSortType{};       // for sorting by the type
-    QRadioButton *radioSortProdMod{};    // for sorting by the producer and model
-    QPushButton *btnSort{};             // for sorting
+    QRadioButton *radioSortRegNumber = new QRadioButton(
+            "By registration number");  // for sorting by the registration number
+    QRadioButton *radioSortType = new QRadioButton("By type");      // for sorting by the type
+    QRadioButton *radioSortProdMod = new QRadioButton(
+            "By producer and model");   // for sorting by the producer and model
+    QPushButton *btnSort = new QPushButton("&Sort");             // for sorting
 
-    QPushButton *btnAddToWash{};         // for adding to the washing list
-    QPushButton *btnClearWash{};         // for clearing the washing list
-    QPushButton *btnGenerateWash{};      // for generating a random washing list
+    QPushButton *btnAddToWash = new QPushButton("&Add to wash");         // for adding to the washing list
+    QPushButton *btnClearWash = new QPushButton("&Clear wash");      // for clearing the washing list
+    QPushButton *btnGenerateWash = new QPushButton("&Generate wash");      // for generating a random washing list
 
-    QPushButton *btnUndo{};              // for undoing the last op
-    QPushButton *btnCountModels{};       // for counting all the models
-    QPushButton *btnClose{};             // for closing the app
+    QPushButton *btnUndo = new QPushButton("&Undo");              // for undoing the last op
+    QPushButton *btnCountModels = new QPushButton("&Count models");       // for counting all the models
+    QPushButton *btnExport = new QPushButton("&Export"); // for exporting the car wash data
+    QPushButton *btnClose = new QPushButton("&Close");            // for closing the app
 
     void initGUI();                             // method to initialize the GUI
-
-    void loadData();                            // method to load the data into the GUI
 
     void connectSignals_Slots();                // method to add actions to the elements of the GUI
 
     void reloadList(const vector<Car> &);        // method to update the cars list of the GUI
 
+    void reloadWashingList();
+
 public:
     explicit CarGUI(Service &serv);
+
+    // overriding the close event behavior
+    void closeEvent(QCloseEvent *) override;
 
     // method for adding a car to the car list
     void guiAdd();
@@ -103,5 +110,23 @@ public:
 
     // method for filtering a car by a criteria
     void guiFilter(const string &, bool(*compareMethod)(const Car &, const string &)) const;
+
+    // method for adding elements to the car wash
+    void guiAddToWash();
+
+    // method for clearing the washing list
+    void guiClearWash();
+
+    // method for generating a random list of cars to wash
+    void guiGenerateWash();
+
+    // method for undo
+    void guiUndo();
+
+    // method for counting the models
+    void guiCountModels() const;
+
+    // method for exporting the washing list to a CSV or HTML file
+    void guiExport() const;
 
 };

@@ -150,7 +150,7 @@ void Service::clearWashingList() {
     this->washingList.clearWash();
 }
 
-void Service::randomWashingList(unsigned int numberToGenerate, const vector<Car> &cars) {
+void Service::randomWashingList(int numberToGenerate, const vector<Car> &cars) {
     vector<Car> toRandomize = Repository::copyList(cars);
 
     this->washingList.clearWash();
@@ -176,22 +176,30 @@ std::unordered_map<string, DTO> Service::countModels() const {
     return totalModels;
 }
 
-void Service::exportToFile(const string &fileName) {
-    std::ofstream fout(fileName);
+void Service::exportToFile(const string &fileName, const string &extension) {
+    std::ofstream fout(fileName + extension);
 
     if (!fout.is_open()) {
         throw ServiceException("Error open: " + fileName);
     }
 
-    for (const auto &car: this->washingList.washCars())
-        fout << car.getRegNumber() << "," << car.getProducer() << "," << car.getModel() << "," << car.getType() << "\n";
+    if (extension == ".html") {
+        for (const auto &car: this->washingList.washCars()) {
+            fout << "<p>";
+            fout << car.getRegNumber() << "," << car.getProducer() << "," << car.getModel() << "," << car.getType() << "\n";
+        }
+    } else {
+        for (const auto &car: this->washingList.washCars())
+            fout << car.getRegNumber() << "," << car.getProducer() << "," << car.getModel() << "," << car.getType()
+                 << "\n";
+    }
 
     fout.close();
 }
 
 void Service::undo() {
     if (this->undoList.empty()) {
-        throw ServiceException("Nu mai exista operatii.");
+        throw ServiceException("No undo operations available.");
     }
 
     // instantiem un pointer catre obiectul ActiuneUndo pe care trebuie sa-l folosim

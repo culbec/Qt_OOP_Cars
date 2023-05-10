@@ -546,21 +546,24 @@ void exportToFileTests() {
     service.addToWashingList("CJ11LLL");
 
     assert(washingList.washSize() == 1);
-    service.exportToFile(fileName);
+    service.exportToFile(fileName, ".txt");
+    service.exportToFile(fileName, ".html");
 
     FileRepository repo2{fileName};
 
     assert(repo2.getSize() == 1);
 
-    try {
-        service.exportToFile("noexist.txt");
-    } catch (ServiceException &) { assert(true); }
 }
 
 void undoTests() {
     Repository repository;
     WashingList washingList;
     Service service{repository, washingList};
+
+    try {
+        service.undo();
+        assert(false);
+    } catch (ServiceException &) { assert(true); }
 
     service.addCarService("CJ11LOL", "Audi", "A4", "Sedan");
 

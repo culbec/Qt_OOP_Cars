@@ -8,17 +8,16 @@
 
 int main(int argc, char** argv) {
     runTests();
-    std::cout << "Tests ok!\n";
+    //std::cout << "Tests ok!\n";
 
     QApplication app{argc, argv};
 
-
-    Repository repository;
+    FileRepository repository{"cars.txt"};
     WashingList washingList;
     Service service{repository, washingList};
     CarGUI carGui(service);
 
-    return app.exec();
+    return QApplication::exec();
 
 
     /*WashingList washingList;

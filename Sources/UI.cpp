@@ -229,11 +229,11 @@ void UI::uiExportToFile() {
             return;
         } else if (option == "CSV") {
             fileName.append(".csv");
-            this->carService.exportToFile(fileName);
+            this->carService.exportToFile(fileName, ".csv");
             break;
         } else if (option == "HTML") {
             fileName.append(".html");
-            this->carService.exportToFile(fileName);
+            this->carService.exportToFile(fileName, ".html");
             break;
         } else {
             cout << "Optiune invalida!\n";

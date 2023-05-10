@@ -4,19 +4,23 @@
 CarGUI::CarGUI(Service &serv) : service{serv} {
     this->initGUI(); // constructing the GUI
     this->connectSignals_Slots(); // connecting the buttons to actions
-    //this->loadData(); // loading the existing data into the GUI
+    this->reloadList(this->service.getCars()); // loading the existing data into the GUI
+}
+
+// overriding the close event signal
+// when pressing the 'x' button, the app should close
+
+void CarGUI::closeEvent(QCloseEvent *event) {
+    // quitting the whole app
+    QApplication::quit();
 }
 
 void CarGUI::initGUI() {
-    this->mainLayout = new QHBoxLayout;     // declaring the layout
-
     //  ------ BUILDING THE LEFT SIDE OF THE WINDOW ------
     auto *leftSide = new QWidget;        // left side of the window
-    QLayout *leftSideLayout = new QHBoxLayout;  // layout for the left side
+    auto *leftSideLayout = new QHBoxLayout;  // layout for the left side
 
-    this->tableCars = new QTableWidget; // the table which will contain the cars
-    this->tableCars->setColumnCount(4); // the columns of the table
-    this->tableCars->setRowCount(10); // the number of cars which will be shown
+    this->tableCars->setColumnCount(4); // the columns of the table (setting the categories)
 
     QStringList headerTable; // header of the car table
 
@@ -35,14 +39,7 @@ void CarGUI::initGUI() {
 
     // ------ BUILDING THE RIGHT SIDE OF THE WINDOW ------
     auto *rightSide = new QWidget;       // right side of the window
-    QLayout *rightSideLayout = new QVBoxLayout; // layout for the right side
-
-    this->commandsBox = new QGroupBox("Commands");
-    this->operationsBox = new QGroupBox("Operations");
-    this->filterBox = new QGroupBox("Filter");
-    this->sortBox = new QGroupBox("Sort");
-    this->washBox = new QGroupBox("Wash");
-    this->otherBox = new QGroupBox("Others");
+    auto *rightSideLayout = new QVBoxLayout; // layout for the right side
 
     QLayout *commandsLayout = new QVBoxLayout;
     QLayout *operationsLayout = new QHBoxLayout;
@@ -51,27 +48,14 @@ void CarGUI::initGUI() {
     QLayout *washLayout = new QHBoxLayout;
     QLayout *otherLayout = new QHBoxLayout;
 
-    // operations buttons
-    this->btnAdd = new QPushButton("&Add");
-    this->btnDelete = new QPushButton("&Delete");
-    this->btnModify = new QPushButton("&Modify");
-    this->btnFind = new QPushButton("&Find");
-
     // adding the buttons to the operations section
     operationsLayout->addWidget(this->btnAdd);
     operationsLayout->addWidget(this->btnDelete);
     operationsLayout->addWidget(this->btnModify);
     operationsLayout->addWidget(this->btnFind);
 
-    // filter buttons
-    this->radioFilterProducer = new QRadioButton("By producer");
-    this->radioFilterType = new QRadioButton("By type");
-
-    this->filterCriteria = new QLineEdit;
     this->filterCriteria->setClearButtonEnabled(true);
     this->filterCriteria->setPlaceholderText("Filter criteria");
-
-    this->btnFilter = new QPushButton("&Filter");
 
     auto *radioFilterButtons = new QWidget;
     QLayout *radioFilterLayout = new QHBoxLayout;
@@ -84,13 +68,6 @@ void CarGUI::initGUI() {
     filterLayout->addWidget(this->filterCriteria);
     filterLayout->addWidget(this->btnFilter);
 
-    // sort buttons
-    this->radioSortRegNumber = new QRadioButton("By registration number");
-    this->radioSortType = new QRadioButton("By type");
-    this->radioSortProdMod = new QRadioButton("By producer and model");
-
-    this->btnSort = new QPushButton("&Sort");
-
     auto *radioSortButtons = new QWidget;
     QLayout *radioSortLayout = new QHBoxLayout;
 
@@ -102,22 +79,11 @@ void CarGUI::initGUI() {
     sortLayout->addWidget(radioSortButtons);
     sortLayout->addWidget(this->btnSort);
 
-    // washing buttons and washing window
-    this->btnAddToWash = new QPushButton("&Add to wash");
-    this->btnClearWash = new QPushButton("&Clear wash");
-    this->btnGenerateWash = new QPushButton("&Generate wash");
-
     washLayout->addWidget(this->btnAddToWash);
     washLayout->addWidget(this->btnClearWash);
     washLayout->addWidget(this->btnGenerateWash);
 
-    // wash window
-    this->washWindow = new QWidget;
-    this->washWindowLayout = new QVBoxLayout;
-
-    this->tableWash = new QTableWidget;
     this->tableWash->setColumnCount(4);
-    this->tableWash->setRowCount(10);
 
     QStringList headerWash;
     headerWash << "Registration Number" << "Producer" << "Model" << "Type";
@@ -129,13 +95,9 @@ void CarGUI::initGUI() {
 
     this->washWindow->setLayout(this->washWindowLayout);
 
-    // others
-    this->btnUndo = new QPushButton("&Undo");
-    this->btnCountModels = new QPushButton("&Count models");
-    this->btnClose = new QPushButton("&Close");
-
     otherLayout->addWidget(this->btnUndo);
     otherLayout->addWidget(this->btnCountModels);
+    otherLayout->addWidget(this->btnExport);
     otherLayout->addWidget(this->btnClose);
 
     // setting the layout of the boxes
@@ -204,14 +166,15 @@ void CarGUI::connectSignals_Slots() {
             this->reloadList(Service::sortProducerModel(this->service.getCars()));
     });
 
-    /*QObject::connect(this->btnAddToWash, &QPushButton::clicked, this, &CarGUI::guiAddToWash);
+    QObject::connect(this->btnAddToWash, &QPushButton::clicked, this, &CarGUI::guiAddToWash);
     QObject::connect(this->btnClearWash, &QPushButton::clicked, this, &CarGUI::guiClearWash);
     QObject::connect(this->btnGenerateWash, &QPushButton::clicked, this, &CarGUI::guiGenerateWash);
 
     QObject::connect(this->btnUndo, &QPushButton::clicked, this, &CarGUI::guiUndo);
-    QObject::connect(this->btnCountModels, &QPushButton::clicked, this, &CarGUI::guiCountModels);*/
-    QObject::connect(this->btnClose, &QPushButton::clicked, this, [&] {
-        QMessageBox::information(this, "Information", "Leaving the app...");
+    QObject::connect(this->btnCountModels, &QPushButton::clicked, this, &CarGUI::guiCountModels);
+    QObject::connect(this->btnExport, &QPushButton::clicked, this, &CarGUI::guiExport);
+    QObject::connect(this->btnClose, &QPushButton::clicked, this, [this] {
+        QMessageBox::information(this, "Feedback", "Leaving the app...");
         QApplication::quit();
     });
 }
@@ -232,6 +195,25 @@ void CarGUI::reloadList(const vector<Car> &cars) {
                                  new QTableWidgetItem(QString::fromStdString(car.getModel())));
         this->tableCars->setItem(lineNumber, 3,
                                  new QTableWidgetItem(QString::fromStdString(car.getType())));
+        ++lineNumber;
+    }
+}
+
+void CarGUI::reloadWashingList() {
+    // clearing the table
+    this->tableWash->clearContents();
+
+    // setting the number of cars which should be added
+    this->tableWash->setRowCount(this->service.getWashingList().washSize());
+
+    int lineNumber = 0;
+
+    // refreshing the list
+    for (const auto &car: this->service.getWashingList().washCars()) {
+        this->tableWash->setItem(lineNumber, 0, new QTableWidgetItem(QString::fromStdString(car.getRegNumber())));
+        this->tableWash->setItem(lineNumber, 1, new QTableWidgetItem(QString::fromStdString(car.getProducer())));
+        this->tableWash->setItem(lineNumber, 2, new QTableWidgetItem(QString::fromStdString(car.getModel())));
+        this->tableWash->setItem(lineNumber, 3, new QTableWidgetItem(QString::fromStdString(car.getType())));
         ++lineNumber;
     }
 }
@@ -485,6 +467,7 @@ void CarGUI::guiFilter(const string &criteria, bool(*compareMethod)(const Car &,
         tableLayout->addWidget(tableFiltered);
         tableLayout->addWidget(btnTableClose);
 
+        filteredWindow->setGeometry(50, 50, 600, 600);
         filteredWindow->show();
 
         // completing the table
@@ -507,4 +490,260 @@ void CarGUI::guiFilter(const string &criteria, bool(*compareMethod)(const Car &,
     } catch (ServiceException &sE) {
         QMessageBox::warning((QWidget *) this, "Warning", "There are no cars with the specified criteria!");
     }
+}
+
+void CarGUI::guiAddToWash() {
+    // initializing a new window for this app
+    auto *addWashWindow = new QWidget;
+    auto *addWashLayout = new QFormLayout;
+
+    addWashWindow->setLayout(addWashLayout);
+
+    auto *addWashLabel = new QLabel("Registration number");
+    auto *addWashEdit = new QLineEdit;
+
+    auto *addWashBtn = new QPushButton("&Add to wash");
+    auto *addWashBtnClose = new QPushButton("&Close");
+
+    addWashLayout->addRow(addWashLabel, addWashEdit);
+    addWashLayout->addWidget(addWashBtn);
+    addWashLayout->addWidget(addWashBtnClose);
+
+    addWashWindow->show();
+
+    QObject::connect(addWashBtnClose, &QPushButton::clicked, addWashWindow, [addWashWindow]() {
+        addWashWindow->close();
+    });
+
+    QObject::connect(addWashBtn, &QPushButton::clicked, addWashWindow, [=]() {
+        // capturing the elements of the form
+        string regNumber = addWashEdit->text().toStdString();
+        try {
+            // adding the car to the washing list
+            this->service.addToWashingList(regNumber);
+
+            // refreshing the washing list
+            this->reloadWashingList();
+
+            // showing a message of success
+            QMessageBox::information(addWashWindow, "Feedback", "Car added successfully!");
+
+            // showing the list if it is closed
+            if (this->washWindow->isHidden()) {
+                this->washWindow->show();
+            }
+
+        } catch (ServiceException &sE) {
+            QMessageBox::warning(addWashWindow, "Warning",
+                                 "The car with the specified registration number does not exist!");
+        }
+        addWashWindow->close();
+    });
+}
+
+void CarGUI::guiClearWash() {
+    // verifying first if the list is clear
+    if (this->service.getWashingList().washSize() == 0) {
+        QMessageBox::warning(this, "Warning", "The list is already clear!");
+        return;
+    }
+    // clearing the list
+    this->service.clearWashingList();
+
+    // updating the list
+    this->reloadWashingList();
+
+    // showing a message of success
+    QMessageBox::information(this, "Feedback", "Washing list clear successfully!");
+
+    // showing the window if it is closed
+    if (this->washWindow->isHidden()) {
+        this->washWindow->show();
+    }
+}
+
+void CarGUI::guiGenerateWash() {
+    // verifying first if the list is clear
+    if(this->service.getCars().empty()) {
+        QMessageBox::warning(this, "Warning", "The car list is empty!");
+        return;
+    }
+    // building a new window
+    auto *generateWashWindow = new QWidget;
+    auto *generateWashLayout = new QVBoxLayout;
+    generateWashWindow->setLayout(generateWashLayout);
+
+    // a layout for the buttons
+    auto *generateBtnsWidget = new QWidget;
+    auto *generateBtnsLayout = new QHBoxLayout;
+    generateBtnsWidget->setLayout(generateBtnsLayout);
+
+    auto *generateBtn = new QPushButton("&Generate");
+    auto *closeBtn = new QPushButton("&Close");
+
+    generateBtnsLayout->addWidget(generateBtn);
+    generateBtnsLayout->addWidget(closeBtn);
+
+    // using a slider for selecting the number of cars to be generated
+    auto *numberSlider = new QSlider(Qt::Horizontal);
+    numberSlider->setMinimum(1);
+    numberSlider->setMaximum(this->service.getCars().size());
+    numberSlider->hasTracking();
+
+    // building a new widget of labels to show the minimum number of cars, the maximum, and the current value
+    auto *labelWindow = new QWidget;
+    auto *labelLayout = new QVBoxLayout;
+    labelWindow->setLayout(labelLayout);
+
+    auto *minimumLabel = new QLabel(QString::fromStdString("Minimum cars to be generated: " + std::to_string(numberSlider->minimum())));
+    auto *maximumLabel = new QLabel(QString::fromStdString("Maximum cars to be generated: " + std::to_string(numberSlider->maximum())));
+    auto *currentLabel = new QLabel(QString::fromStdString("Number of cars to be generated: " + std::to_string(numberSlider->value())));
+
+    labelLayout->addWidget(minimumLabel);
+    labelLayout->addWidget(maximumLabel);
+    labelLayout->addWidget(currentLabel);
+
+    generateWashLayout->addWidget(labelWindow);
+    generateWashLayout->addWidget(numberSlider);
+    generateWashLayout->addWidget(generateBtnsWidget);
+
+    generateWashWindow->show();
+
+    QObject::connect(closeBtn, &QPushButton::clicked, generateWashWindow, [generateWashWindow](){
+        generateWashWindow->close();
+    });
+
+    QObject::connect(numberSlider, &QSlider::valueChanged, currentLabel, [numberSlider, currentLabel](){
+        currentLabel->setText(QString::fromStdString("Number of cars to be generated: " + std::to_string(numberSlider->value())));
+    });
+
+    QObject::connect(generateBtn, &QPushButton::clicked, generateWashWindow, [=](){
+        // capturing the value from the slider
+        auto numberOfCars = numberSlider->value();
+
+        // generating the car list
+        this->service.randomWashingList(numberOfCars, this->service.getCars());
+
+        // reloading the washing list
+        this->reloadWashingList();
+
+        // showing a message of success
+        QMessageBox::information(generateWashWindow, "Feedback", "Generated successfully!");
+
+        // showing the wash list if it is closed
+        if(this->washWindow->isHidden()) {
+            this->washWindow->show();
+        }
+
+        // closing the window
+        generateWashWindow->close();
+    });
+}
+
+void CarGUI::guiUndo() {
+    try {
+        // doing undo
+        this->service.undo();
+
+        // reloading the list
+        this->reloadList(this->service.getCars());
+
+        // showing a message of success
+        QMessageBox::information(this, "Feedback", "Undo successful!");
+
+    } catch (ServiceException &sE) {
+        QMessageBox::warning(this, "Warning", QString::fromStdString(sE.getMessage()));
+    }
+}
+
+void CarGUI::guiCountModels() const {
+    if(this->service.getCars().empty()) {
+        QMessageBox::warning(this->window(), "Warning", "The car list is empty!");
+        return;
+    }
+    // building a new window
+    auto *countWindow = new QWidget;
+    auto *countLayout = new QVBoxLayout;
+    countWindow->setLayout(countLayout);
+
+    auto *countTable = new QTableWidget;
+    auto *closeBtn = new QPushButton("&Close");
+
+    countTable->setColumnCount(2);
+    countTable->setHorizontalHeaderLabels(QStringList{"Model", "Number of"});
+    countTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+    // populating the table
+    auto countModels = this->service.countModels();
+    countTable->setRowCount(countModels.size());
+    int lineNumber = 0;
+    for(const auto& model: countModels) {
+        countTable->setItem(lineNumber, 0, new QTableWidgetItem(QString::fromStdString(model.first)));
+        countTable->setItem(lineNumber, 1, new QTableWidgetItem(QString::number(model.second.getCount())));
+        ++lineNumber;
+    }
+
+    countLayout->addWidget(countTable);
+    countLayout->addWidget(closeBtn);
+
+    countWindow->setGeometry(50, 50, 300, 300);
+    countWindow->show();
+
+    QObject::connect(closeBtn, &QPushButton::clicked, countWindow, [countWindow](){
+       countWindow->close();
+    });
+}
+
+void CarGUI::guiExport() const {
+    if(this->service.getWashingList().washSize() == 0) {
+        QMessageBox::warning(this->window(), "Warning", "The washing list is empty!");
+        return;
+    }
+
+    // building a new window
+    auto *exportWindow = new QWidget;
+    auto *exportLayout = new QFormLayout;
+    exportWindow->setLayout(exportLayout);
+
+    auto *btns = new QWidget;
+    auto *btnsLayout = new QHBoxLayout;
+    btns->setLayout(btnsLayout);
+
+    auto *exportBtn = new QPushButton("&Export");
+    auto *closeBtn = new QPushButton("&Close");
+
+    btnsLayout->addWidget(exportBtn);
+    btnsLayout->addWidget(closeBtn);
+
+    // using a combo box to show the options of file extensions
+    auto *extensionsList = new QComboBox;
+    extensionsList->addItems(QStringList{"csv", "html"});
+
+    // line edit for the file name
+    auto *editFile = new QLineEdit;
+
+    exportLayout->addRow("File name", editFile);
+    exportLayout->addRow("Extensions", extensionsList);
+    exportLayout->addWidget(btns);
+
+    exportWindow->show();
+
+    QObject::connect(closeBtn, &QPushButton::clicked, exportWindow, [exportWindow](){
+        exportWindow->close();
+    });
+
+    QObject::connect(exportBtn, &QPushButton::clicked, exportWindow, [=](){
+        // constructing the file
+        string extension = "." + extensionsList->currentText().toStdString();
+        string fileName = editFile->text().toStdString() + extension;
+        try {
+            // now we export to the file
+            this->service.exportToFile(fileName, extension);
+            // showing a message of success
+            QMessageBox::information(exportWindow, "Feedback", "Exported successfully!");
+        } catch (ServiceException &sE) {
+            QMessageBox::warning(exportWindow, "Warning", QString::fromStdString(sE.getMessage()));
+        }
+        exportWindow->close();
+    });
 }
