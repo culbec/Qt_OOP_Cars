@@ -50,8 +50,7 @@ Car Service::deleteCarService(const string &regNumberToDelete) {
     // daca exista exceptie, va fi gestionata de repo
     Car deletedCar = this->carRepository.deleteCar(regNumberToDelete);
     this->undoList.push_back(std::make_unique<UndoDelete>(UndoDelete{deletedCar, this->carRepository}));
-    return deletedCar;
-}
+    return deletedCar;}
 
 Car Service::findCarService(const string &regNumberToFind) {
     // cautam masina prin intermediul repo
@@ -111,8 +110,7 @@ carList Service::sortType(const carList &list) {
         return car1.getType() < car2.getType();
     });
 
-    return toSort;
-}
+    return toSort;}
 
 carList Service::sortProducerModel(const carList &list) {
     /*return Service::generalSort(Repository::copyList(list), [](const Car &car1, const Car &car2) {
@@ -128,8 +126,7 @@ carList Service::sortProducerModel(const carList &list) {
         return car1.getProducer() < car2.getProducer();
     });
 
-    return toSort;
-}
+    return toSort;}
 
 WashingList Service::getWashingList() const {
     return this->washingList;

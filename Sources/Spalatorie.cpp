@@ -26,5 +26,4 @@ vector<Car> WashingList::generateRandom(unsigned int numberToGenerate, vector<Ca
     for (auto i = 0; i < numberToGenerate; i++)
         randomList.push_back(cars.at(i));
 
-    return randomList;
-}
+    return randomList;}

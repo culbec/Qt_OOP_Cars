@@ -50,8 +50,7 @@ carList Repository::copyList(const carList &list) {
     carList copyList;
     copy(list.begin(), list.end(), back_inserter(copyList));
 
-    return copyList;
-}
+    return copyList;}
 
 void FileRepository::loadFromFile() {
     // initializam stream-ul de citire
@@ -108,11 +107,9 @@ void FileRepository::addCar(const Car &car) {
 Car FileRepository::deleteCar(const string &regNumber) {
     Car deleted = Repository::deleteCar(regNumber); // apelam metoda din clasa de baza
     this->writeToFile(); // scriem in fisier
-    return deleted;
-}
+    return deleted;}
 
 Car FileRepository::modifyCar(const Car &car) {
     Car modified = Repository::modifyCar(car); // apelam metoda din clasa de baza
     this->writeToFile(); // scriem in fisier
-    return modified;
-}
+    return modified;}

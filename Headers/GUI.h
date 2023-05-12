@@ -82,6 +82,10 @@ private:
     QPushButton *btnExport = new QPushButton("&Export"); // for exporting the car wash data
     QPushButton *btnClose = new QPushButton("&Close");            // for closing the app
 
+    // dynamic btns widget
+    QGroupBox *btnsDynamicGB = new QGroupBox("Dynamic Buttons");
+    QVBoxLayout *btnsDynamicLay = new QVBoxLayout;
+
     void initGUI();                             // method to initialize the GUI
 
     void connectSignals_Slots();                // method to add actions to the elements of the GUI
@@ -128,5 +132,8 @@ public:
 
     // method for exporting the washing list to a CSV or HTML file
     void guiExport() const;
+
+    // method for updating the dynamic btns
+    void updateDynamicBtns();
 
 };

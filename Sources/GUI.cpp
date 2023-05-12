@@ -5,6 +5,7 @@ CarGUI::CarGUI(Service &serv) : service{serv} {
     this->initGUI(); // constructing the GUI
     this->connectSignals_Slots(); // connecting the buttons to actions
     this->reloadList(this->service.getCars()); // loading the existing data into the GUI
+    this->updateDynamicBtns(); // for updating the dynamic created btns
 }
 
 // overriding the close event signal
@@ -140,6 +141,11 @@ void CarGUI::initGUI() {
     this->setWindowTitle("Car Rental Service"); // title of the main window
     this->washWindow->setWindowTitle("Washing List"); // title of the washing list window
 
+    // dynamic btns layout
+    this->btnsDynamicGB->setLayout(this->btnsDynamicLay);
+
+    this->mainLayout->addWidget(this->btnsDynamicGB);
+
     this->washWindow->show();
     this->show();
 }
@@ -247,6 +253,7 @@ void CarGUI::guiAdd() {
     addWindowLayout->addWidget(addBtn);
     addWindowLayout->addWidget(addBtnClose);
 
+    addWindow->setFixedSize(400, 400);
     addWindow->show();
 
     QObject::connect(addBtnClose, &QPushButton::clicked, addWindow, [addWindow]() {
@@ -269,6 +276,9 @@ void CarGUI::guiAdd() {
 
             // showing a message of success
             QMessageBox::information(addWindow, "Feedback", "Car added successfully!");
+
+            // updating the btns
+            this->updateDynamicBtns();
 
             // closing the window
             addWindow->close();
@@ -297,6 +307,7 @@ void CarGUI::guiDelete() {
     deleteWindowLayout->addWidget(deleteBtn);
     deleteWindowLayout->addWidget(deleteBtnClose);
 
+    deleteWindow->setFixedSize(400, 400);
     deleteWindow->show();
 
     QObject::connect(deleteBtnClose, &QPushButton::clicked, deleteWindow, [deleteWindow]() {
@@ -318,6 +329,9 @@ void CarGUI::guiDelete() {
             auto message = QString::fromStdString("Deleted: " + deleted.getRegNumber() + " | " + deleted.getProducer() +
                                                   " | " + deleted.getModel() + " | " + deleted.getType());
             QMessageBox::information(deleteWindow, "Feedback", message);
+
+            // updating the btns
+            this->updateDynamicBtns();
 
             // closing the window
             deleteWindow->close();
@@ -354,6 +368,7 @@ void CarGUI::guiModify() {
     modifyWindowLayout->addWidget(modifyBtn);
     modifyWindowLayout->addWidget(modifyBtnClose);
 
+    modifyWindow->setFixedSize(400, 400);
     modifyWindow->show();
 
     QObject::connect(modifyBtnClose, &QPushButton::clicked, modifyWindow, [modifyWindow]() {
@@ -379,6 +394,9 @@ void CarGUI::guiModify() {
                     "Modified: " + modified.getRegNumber() + " | " + modified.getProducer()
                     + " | " + modified.getModel() + " | " + modified.getType());
             QMessageBox::information(modifyWindow, "Feedback", message);
+
+            // updating the btns
+            this->updateDynamicBtns();
 
             // closing the window
             modifyWindow->close();
@@ -414,6 +432,7 @@ void CarGUI::guiFind() const {
 
     findWindowLayout->addWidget(btns);
 
+    findWindow->setFixedSize(400, 400);
     findWindow->show();
 
     QObject::connect(findBtnClose, &QPushButton::clicked, findWindow, [findWindow]() {
@@ -467,7 +486,7 @@ void CarGUI::guiFilter(const string &criteria, bool(*compareMethod)(const Car &,
         tableLayout->addWidget(tableFiltered);
         tableLayout->addWidget(btnTableClose);
 
-        filteredWindow->setGeometry(50, 50, 600, 600);
+        filteredWindow->setFixedSize(600, 600);
         filteredWindow->show();
 
         // completing the table
@@ -509,6 +528,7 @@ void CarGUI::guiAddToWash() {
     addWashLayout->addWidget(addWashBtn);
     addWashLayout->addWidget(addWashBtnClose);
 
+    addWashWindow->setFixedSize(400, 400);
     addWashWindow->show();
 
     QObject::connect(addWashBtnClose, &QPushButton::clicked, addWashWindow, [addWashWindow]() {
@@ -564,7 +584,7 @@ void CarGUI::guiClearWash() {
 
 void CarGUI::guiGenerateWash() {
     // verifying first if the list is clear
-    if(this->service.getCars().empty()) {
+    if (this->service.getCars().empty()) {
         QMessageBox::warning(this, "Warning", "The car list is empty!");
         return;
     }
@@ -595,9 +615,12 @@ void CarGUI::guiGenerateWash() {
     auto *labelLayout = new QVBoxLayout;
     labelWindow->setLayout(labelLayout);
 
-    auto *minimumLabel = new QLabel(QString::fromStdString("Minimum cars to be generated: " + std::to_string(numberSlider->minimum())));
-    auto *maximumLabel = new QLabel(QString::fromStdString("Maximum cars to be generated: " + std::to_string(numberSlider->maximum())));
-    auto *currentLabel = new QLabel(QString::fromStdString("Number of cars to be generated: " + std::to_string(numberSlider->value())));
+    auto *minimumLabel = new QLabel(
+            QString::fromStdString("Minimum cars to be generated: " + std::to_string(numberSlider->minimum())));
+    auto *maximumLabel = new QLabel(
+            QString::fromStdString("Maximum cars to be generated: " + std::to_string(numberSlider->maximum())));
+    auto *currentLabel = new QLabel(
+            QString::fromStdString("Number of cars to be generated: " + std::to_string(numberSlider->value())));
 
     labelLayout->addWidget(minimumLabel);
     labelLayout->addWidget(maximumLabel);
@@ -609,15 +632,16 @@ void CarGUI::guiGenerateWash() {
 
     generateWashWindow->show();
 
-    QObject::connect(closeBtn, &QPushButton::clicked, generateWashWindow, [generateWashWindow](){
+    QObject::connect(closeBtn, &QPushButton::clicked, generateWashWindow, [generateWashWindow]() {
         generateWashWindow->close();
     });
 
-    QObject::connect(numberSlider, &QSlider::valueChanged, currentLabel, [numberSlider, currentLabel](){
-        currentLabel->setText(QString::fromStdString("Number of cars to be generated: " + std::to_string(numberSlider->value())));
+    QObject::connect(numberSlider, &QSlider::valueChanged, currentLabel, [numberSlider, currentLabel]() {
+        currentLabel->setText(
+                QString::fromStdString("Number of cars to be generated: " + std::to_string(numberSlider->value())));
     });
 
-    QObject::connect(generateBtn, &QPushButton::clicked, generateWashWindow, [=](){
+    QObject::connect(generateBtn, &QPushButton::clicked, generateWashWindow, [=]() {
         // capturing the value from the slider
         auto numberOfCars = numberSlider->value();
 
@@ -631,7 +655,7 @@ void CarGUI::guiGenerateWash() {
         QMessageBox::information(generateWashWindow, "Feedback", "Generated successfully!");
 
         // showing the wash list if it is closed
-        if(this->washWindow->isHidden()) {
+        if (this->washWindow->isHidden()) {
             this->washWindow->show();
         }
 
@@ -651,13 +675,16 @@ void CarGUI::guiUndo() {
         // showing a message of success
         QMessageBox::information(this, "Feedback", "Undo successful!");
 
+        // updating the btns
+        this->updateDynamicBtns();
+
     } catch (ServiceException &sE) {
         QMessageBox::warning(this, "Warning", QString::fromStdString(sE.getMessage()));
     }
 }
 
 void CarGUI::guiCountModels() const {
-    if(this->service.getCars().empty()) {
+    if (this->service.getCars().empty()) {
         QMessageBox::warning(this->window(), "Warning", "The car list is empty!");
         return;
     }
@@ -677,7 +704,7 @@ void CarGUI::guiCountModels() const {
     auto countModels = this->service.countModels();
     countTable->setRowCount(countModels.size());
     int lineNumber = 0;
-    for(const auto& model: countModels) {
+    for (const auto &model: countModels) {
         countTable->setItem(lineNumber, 0, new QTableWidgetItem(QString::fromStdString(model.first)));
         countTable->setItem(lineNumber, 1, new QTableWidgetItem(QString::number(model.second.getCount())));
         ++lineNumber;
@@ -686,16 +713,16 @@ void CarGUI::guiCountModels() const {
     countLayout->addWidget(countTable);
     countLayout->addWidget(closeBtn);
 
-    countWindow->setGeometry(50, 50, 300, 300);
+    countWindow->setFixedSize(600, 600);
     countWindow->show();
 
-    QObject::connect(closeBtn, &QPushButton::clicked, countWindow, [countWindow](){
-       countWindow->close();
+    QObject::connect(closeBtn, &QPushButton::clicked, countWindow, [countWindow]() {
+        countWindow->close();
     });
 }
 
 void CarGUI::guiExport() const {
-    if(this->service.getWashingList().washSize() == 0) {
+    if (this->service.getWashingList().washSize() == 0) {
         QMessageBox::warning(this->window(), "Warning", "The washing list is empty!");
         return;
     }
@@ -726,13 +753,10 @@ void CarGUI::guiExport() const {
     exportLayout->addRow("Extensions", extensionsList);
     exportLayout->addWidget(btns);
 
+    exportWindow->setFixedSize(400, 400);
     exportWindow->show();
 
-    QObject::connect(closeBtn, &QPushButton::clicked, exportWindow, [exportWindow](){
-        exportWindow->close();
-    });
-
-    QObject::connect(exportBtn, &QPushButton::clicked, exportWindow, [=](){
+    QObject::connect(exportBtn, &QPushButton::clicked, exportWindow, [=]() {
         // constructing the file
         string extension = "." + extensionsList->currentText().toStdString();
         string fileName = editFile->text().toStdString() + extension;
@@ -746,4 +770,28 @@ void CarGUI::guiExport() const {
         }
         exportWindow->close();
     });
+
+    QObject::connect(closeBtn, &QPushButton::clicked, exportWindow, [exportWindow]() {
+        exportWindow->close();
+    });
+}
+
+void CarGUI::updateDynamicBtns() {
+    // clearing the contents of the btns dynamic widget
+    qDeleteAll(this->btnsDynamicGB->findChildren<QPushButton *>());
+
+    // getting the stats
+    auto stats = this->service.countModels();
+
+    // adding the buttons
+    for(const auto &stat: stats) {
+        auto *dynamicBtn = new QPushButton(QString::fromStdString(stat.second.getModel()));
+        this->btnsDynamicLay->addWidget(dynamicBtn);
+
+        // connecting the button to a action
+        QObject::connect(dynamicBtn, &QPushButton::clicked, this, [this, stat](){
+            auto message = QString::fromStdString("Number of " + stat.second.getModel() + " is " + std::to_string(stat.second.getCount()));
+            QMessageBox::information(this, "Feedback", message);
+        });
+    }
 }
