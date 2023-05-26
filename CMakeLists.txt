@@ -16,7 +16,7 @@ find_package(Qt6 COMPONENTS
         Widgets
        REQUIRED)
 
-add_executable(Qt_OOP_Cars main.cpp main.cpp Sources/Car.cpp Sources/DTO.cpp Sources/Repository.cpp Sources/Service.cpp Sources/Spalatorie.cpp Sources/tests.cpp Sources/UI.cpp Sources/Validator.cpp Headers/GUI.h Sources/GUI.cpp Headers/ListViewModel.h Headers/TableViewModel.h)
+add_executable(Qt_OOP_Cars main.cpp main.cpp Sources/Car.cpp Sources/DTO.cpp Sources/Repository.cpp Sources/Service.cpp Sources/Spalatorie.cpp Sources/tests.cpp Sources/UI.cpp Sources/Validator.cpp Headers/GUI.h Sources/GUI.cpp Headers/ListViewModel.h Headers/TableViewModel.h Headers/Observer.h Headers/Observable.h Headers/CosCRUDGUI.h Headers/CosReadOnly.h)
 target_link_libraries(Qt_OOP_Cars
         Qt6::Core
         Qt6::Gui

@@ -8,7 +8,7 @@
 
 class TableViewModel : public QAbstractTableModel {
 private:
-    const std::vector<Car> cars;
+    const std::vector<Car>& cars;
 
 public:
     explicit TableViewModel(const std::vector<Car> &c): cars{c} {}

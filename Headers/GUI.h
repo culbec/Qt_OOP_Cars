@@ -27,6 +27,10 @@
 #include <QTableView>
 #include "TableViewModel.h"
 
+#include "Observable.h"
+#include "CosCRUDGUI.h"
+#include "CosReadOnly.h"
+
 /*
  * ----- GUI using Qt6 ------
  *
@@ -35,7 +39,7 @@
  *      - the right side: specific commands to operate with the app
  */
 
-class CarGUI : public QWidget {
+class CarGUI : public QWidget, public Observable {
     // QWidget is simply a window
 private:
     Service &service;
@@ -93,12 +97,14 @@ private:
     QGroupBox *btnsDynamicGB = new QGroupBox("Dynamic Buttons");
     QVBoxLayout *btnsDynamicLay = new QVBoxLayout;
 
-    // list widget for adding the cars on a list
+    // list view
     QListWidget *listCars = new QListWidget;
 
-    void initGUI();                             // method to initialize the GUI
+    // btns for CRUDGUI and ReadOnlyGUI
+    QPushButton *btnCRUDGui = new QPushButton("&Wash CRUD GUI");
+    QPushButton *btnReadOnlyGui = new QPushButton("&Wash Read Only GUI");
 
-    void createListView();                      // creates a list view
+    void initGUI();                             // method to initialize the GUI
 
     void connectSignals_Slots();                // method to add actions to the elements of the GUI
 
@@ -107,6 +113,10 @@ private:
     void reloadWashingList();                   // method for updating the washing list
 
     void reloadList(const vector<Car> &);
+
+    void addObserver(Observer* obs) override;
+
+    void notify() override;
 
 public:
     explicit CarGUI(Service &serv);

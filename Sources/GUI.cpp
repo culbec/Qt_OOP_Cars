@@ -1,4 +1,3 @@
-#include <QFormLayout>
 #include "Headers/GUI.h"
 
 CarGUI::CarGUI(Service &serv) : service{serv} {
@@ -8,6 +7,16 @@ CarGUI::CarGUI(Service &serv) : service{serv} {
     this->reloadTable(this->service.getCars()); // loading the existing data into the GUI
     this->reloadList(this->service.getCars()); // loading to the list
     this->updateDynamicBtns(); // for updating the dynamic created btns
+}
+
+void CarGUI::addObserver(Observer *obs) {
+    this->observers.push_back(obs);
+}
+
+void CarGUI::notify() {
+    for (auto obs: this->observers) {
+        obs->update();
+    }
 }
 
 // overriding the close event signal
@@ -164,11 +173,21 @@ void CarGUI::initGUI() {
     auto *tblMod = new TableViewModel(this->service.getCars());
     tblVi->setModel(tblMod);
 
-    for(auto i = 0; i < headerTable.size(); i++) {
+    for (auto i = 0; i < headerTable.size(); i++) {
         tblMod->setHeaderData(i, Qt::Horizontal, headerTable[i]);
     }
 
     this->mainLayout->addWidget(tblVi);
+
+    // adding the buttons for the Cos CRUD Gui and Cos ReadOnly
+    auto *observerBtns = new QGroupBox;
+    auto *observerLay = new QHBoxLayout;
+    observerBtns->setLayout(observerLay);
+
+    observerLay->addWidget(this->btnCRUDGui);
+    observerLay->addWidget(this->btnReadOnlyGui);
+
+    commandsLayout->addWidget(observerBtns);
 
     // running
     this->washWindow->show();
@@ -193,13 +212,11 @@ void CarGUI::connectSignals_Slots() {
             this->reloadTable(Service::sortRegNumber(this->service.getCars()));
             // reupdating the list
             this->reloadList(this->service.getCars());
-        }
-        else if (this->radioSortType->isChecked()) {
+        } else if (this->radioSortType->isChecked()) {
             this->reloadTable(Service::sortType(this->service.getCars()));
             // reupdating the list
             this->reloadList(this->service.getCars());
-        }
-        else if (this->radioSortProdMod->isChecked()) {
+        } else if (this->radioSortProdMod->isChecked()) {
             this->reloadTable(Service::sortProducerModel(this->service.getCars()));
             // reupdating the list
             this->reloadList(this->service.getCars());
@@ -218,9 +235,16 @@ void CarGUI::connectSignals_Slots() {
         QApplication::quit();
     });
 
-    /*QObject::connect(this->listCars, &QListWidget::itemActivated(this->listCars->currentItem()), [&](){
-        this->listCars->currentItem()->setBackground(QBrush(QColor("red")));
-    });*/
+    // for observer
+    QObject::connect(this->btnCRUDGui, &QPushButton::clicked, [this](){
+        auto *CRUD = new CosCRUDGUI(this->service);
+        this->addObserver(CRUD);
+    });
+
+    QObject::connect(this->btnReadOnlyGui, &QPushButton::clicked, [this](){
+        auto *ReadOnly = new CosReadOnly(this->service);
+        this->addObserver(ReadOnly);
+    });
 }
 
 void CarGUI::reloadTable(const vector<Car> &cars) {
@@ -246,8 +270,8 @@ void CarGUI::reloadTable(const vector<Car> &cars) {
 void CarGUI::reloadList(const vector<Car> &cars) {
     this->listCars->clear();
 
-    for(const auto& car: cars){
-        string str = car.getRegNumber() + "\t" + car.getProducer() +  "\t" + car.getModel() + "\t" + car.getType();
+    for (const auto &car: cars) {
+        string str = car.getRegNumber() + "\t" + car.getProducer() + "\t" + car.getModel() + "\t" + car.getType();
         auto *item = new QListWidgetItem(QString::fromStdString(str));
         this->listCars->addItem(item);
     }
@@ -610,6 +634,9 @@ void CarGUI::guiAddToWash() {
                 this->washWindow->show();
             }
 
+            // updating the observers
+            this->notify();
+
         } catch (ServiceException &sE) {
             QMessageBox::warning(addWashWindow, "Warning",
                                  "The car with the specified registration number does not exist!");
@@ -632,6 +659,9 @@ void CarGUI::guiClearWash() {
 
     // showing a message of success
     QMessageBox::information(this, "Feedback", "Washing list clear successfully!");
+
+    // updating the observers
+    this->notify();
 
     // showing the window if it is closed
     if (this->washWindow->isHidden()) {
@@ -710,6 +740,9 @@ void CarGUI::guiGenerateWash() {
 
         // showing a message of success
         QMessageBox::information(generateWashWindow, "Feedback", "Generated successfully!");
+
+        // updating the observers
+        this->notify();
 
         // showing the wash list if it is closed
         if (this->washWindow->isHidden()) {
@@ -841,13 +874,14 @@ void CarGUI::updateDynamicBtns() {
     auto stats = this->service.countModels();
 
     // adding the buttons
-    for(const auto &stat: stats) {
+    for (const auto &stat: stats) {
         auto *dynamicBtn = new QPushButton(QString::fromStdString(stat.second.getModel()));
         this->btnsDynamicLay->addWidget(dynamicBtn);
 
         // connecting the button to a action
-        QObject::connect(dynamicBtn, &QPushButton::clicked, this, [this, stat](){
-            auto message = QString::fromStdString("Number of " + stat.second.getModel() + " is " + std::to_string(stat.second.getCount()));
+        QObject::connect(dynamicBtn, &QPushButton::clicked, this, [this, stat]() {
+            auto message = QString::fromStdString(
+                    "Number of " + stat.second.getModel() + " is " + std::to_string(stat.second.getCount()));
             QMessageBox::information(this, "Feedback", message);
         });
     }
