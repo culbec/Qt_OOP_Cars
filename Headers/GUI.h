@@ -20,6 +20,13 @@
 
 #include <QMessageBox>
 
+#include <QListView>
+#include <QListWidget>
+#include "ListViewModel.h"
+
+#include <QTableView>
+#include "TableViewModel.h"
+
 /*
  * ----- GUI using Qt6 ------
  *
@@ -86,13 +93,20 @@ private:
     QGroupBox *btnsDynamicGB = new QGroupBox("Dynamic Buttons");
     QVBoxLayout *btnsDynamicLay = new QVBoxLayout;
 
+    // list widget for adding the cars on a list
+    QListWidget *listCars = new QListWidget;
+
     void initGUI();                             // method to initialize the GUI
+
+    void createListView();                      // creates a list view
 
     void connectSignals_Slots();                // method to add actions to the elements of the GUI
 
-    void reloadList(const vector<Car> &);        // method to update the cars list of the GUI
+    void reloadTable(const vector<Car> &);        // method to update the cars list of the GUI
 
-    void reloadWashingList();
+    void reloadWashingList();                   // method for updating the washing list
+
+    void reloadList(const vector<Car> &);
 
 public:
     explicit CarGUI(Service &serv);

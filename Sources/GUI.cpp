@@ -3,8 +3,10 @@
 
 CarGUI::CarGUI(Service &serv) : service{serv} {
     this->initGUI(); // constructing the GUI
+    //this->createListView(); // creating the list view
     this->connectSignals_Slots(); // connecting the buttons to actions
-    this->reloadList(this->service.getCars()); // loading the existing data into the GUI
+    this->reloadTable(this->service.getCars()); // loading the existing data into the GUI
+    this->reloadList(this->service.getCars()); // loading to the list
     this->updateDynamicBtns(); // for updating the dynamic created btns
 }
 
@@ -32,7 +34,7 @@ void CarGUI::initGUI() {
     this->tableCars->setHorizontalHeaderLabels(headerTable);
 
     // rezising by the contents of the table
-    this->tableCars->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    this->tableCars->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     // constructing the left side of the window
     leftSideLayout->addWidget(this->tableCars);
@@ -90,7 +92,7 @@ void CarGUI::initGUI() {
     headerWash << "Registration Number" << "Producer" << "Model" << "Type";
 
     this->tableWash->setHorizontalHeaderLabels(headerWash);
-    this->tableWash->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    this->tableWash->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     this->washWindowLayout->addWidget(this->tableWash);
 
@@ -132,7 +134,7 @@ void CarGUI::initGUI() {
     this->washWindow->setWindowIcon(iconWash);
 
     // setting the geometry of the windows -> initial postion
-    QRect mainWindowRect(50, 50, 1000, 300);
+    QRect mainWindowRect(50, 50, 1400, 300);
     QRect washRect(1200, 50, 600, 200);
 
     this->setGeometry(mainWindowRect);
@@ -146,6 +148,29 @@ void CarGUI::initGUI() {
 
     this->mainLayout->addWidget(this->btnsDynamicGB);
 
+    // adding the new List Widget for showing the cars
+    auto *layList = new QVBoxLayout;
+    this->listCars->setLayout(layList);
+    this->mainLayout->addWidget(this->listCars);
+
+    // list model view
+    auto *lstVi = new QListView();
+    auto *lstMod = new ListViewModel(this->service.getCars());
+    lstVi->setModel(lstMod);
+    this->mainLayout->addWidget(lstVi);
+
+    // table model view
+    auto *tblVi = new QTableView();
+    auto *tblMod = new TableViewModel(this->service.getCars());
+    tblVi->setModel(tblMod);
+
+    for(auto i = 0; i < headerTable.size(); i++) {
+        tblMod->setHeaderData(i, Qt::Horizontal, headerTable[i]);
+    }
+
+    this->mainLayout->addWidget(tblVi);
+
+    // running
     this->washWindow->show();
     this->show();
 }
@@ -164,12 +189,21 @@ void CarGUI::connectSignals_Slots() {
             this->guiFilter(this->filterCriteria->text().toStdString(), Service::compareByType);
     });
     QObject::connect(this->btnSort, &QPushButton::clicked, this, [&]() {
-        if (this->radioSortRegNumber->isChecked())
-            this->reloadList(Service::sortRegNumber(this->service.getCars()));
-        else if (this->radioSortType->isChecked())
-            this->reloadList(Service::sortType(this->service.getCars()));
-        else if (this->radioSortProdMod->isChecked())
-            this->reloadList(Service::sortProducerModel(this->service.getCars()));
+        if (this->radioSortRegNumber->isChecked()) {
+            this->reloadTable(Service::sortRegNumber(this->service.getCars()));
+            // reupdating the list
+            this->reloadList(this->service.getCars());
+        }
+        else if (this->radioSortType->isChecked()) {
+            this->reloadTable(Service::sortType(this->service.getCars()));
+            // reupdating the list
+            this->reloadList(this->service.getCars());
+        }
+        else if (this->radioSortProdMod->isChecked()) {
+            this->reloadTable(Service::sortProducerModel(this->service.getCars()));
+            // reupdating the list
+            this->reloadList(this->service.getCars());
+        }
     });
 
     QObject::connect(this->btnAddToWash, &QPushButton::clicked, this, &CarGUI::guiAddToWash);
@@ -183,9 +217,13 @@ void CarGUI::connectSignals_Slots() {
         QMessageBox::information(this, "Feedback", "Leaving the app...");
         QApplication::quit();
     });
+
+    /*QObject::connect(this->listCars, &QListWidget::itemActivated(this->listCars->currentItem()), [&](){
+        this->listCars->currentItem()->setBackground(QBrush(QColor("red")));
+    });*/
 }
 
-void CarGUI::reloadList(const vector<Car> &cars) {
+void CarGUI::reloadTable(const vector<Car> &cars) {
     // clearing the table widget of the and resizing it
     this->tableCars->clearContents();
     this->tableCars->setRowCount(cars.size());
@@ -202,6 +240,16 @@ void CarGUI::reloadList(const vector<Car> &cars) {
         this->tableCars->setItem(lineNumber, 3,
                                  new QTableWidgetItem(QString::fromStdString(car.getType())));
         ++lineNumber;
+    }
+}
+
+void CarGUI::reloadList(const vector<Car> &cars) {
+    this->listCars->clear();
+
+    for(const auto& car: cars){
+        string str = car.getRegNumber() + "\t" + car.getProducer() +  "\t" + car.getModel() + "\t" + car.getType();
+        auto *item = new QListWidgetItem(QString::fromStdString(str));
+        this->listCars->addItem(item);
     }
 }
 
@@ -271,6 +319,9 @@ void CarGUI::guiAdd() {
             // adding the car to the list
             this->service.addCarService(regNumber, producer, model, type);
 
+            // reupdating the table
+            this->reloadTable(this->service.getCars());
+
             // reupdating the list
             this->reloadList(this->service.getCars());
 
@@ -321,6 +372,9 @@ void CarGUI::guiDelete() {
 
             // deleting the car from the list
             auto deleted = this->service.deleteCarService(regNumber);
+
+            // reupdating the table
+            this->reloadTable(this->service.getCars());
 
             // reupdating the list
             this->reloadList(this->service.getCars());
@@ -386,7 +440,10 @@ void CarGUI::guiModify() {
             // modifying effectively
             auto modified = this->service.modifyCarService(regNumber, newProducer, newModel, newType);
 
-            // reloading the list
+            // reloading the table
+            this->reloadTable(this->service.getCars());
+
+            // reupdating the list
             this->reloadList(this->service.getCars());
 
             // showing a information message
@@ -670,7 +727,7 @@ void CarGUI::guiUndo() {
         this->service.undo();
 
         // reloading the list
-        this->reloadList(this->service.getCars());
+        this->reloadTable(this->service.getCars());
 
         // showing a message of success
         QMessageBox::information(this, "Feedback", "Undo successful!");
@@ -759,7 +816,7 @@ void CarGUI::guiExport() const {
     QObject::connect(exportBtn, &QPushButton::clicked, exportWindow, [=]() {
         // constructing the file
         string extension = "." + extensionsList->currentText().toStdString();
-        string fileName = editFile->text().toStdString() + extension;
+        string fileName = editFile->text().toStdString();
         try {
             // now we export to the file
             this->service.exportToFile(fileName, extension);
