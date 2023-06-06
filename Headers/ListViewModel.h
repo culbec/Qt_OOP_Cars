@@ -6,30 +6,30 @@
 
 class ListViewModel : public QAbstractListModel {
 private:
-    const std::vector<Car>& cars;
+    Service& service;
 
 public:
-    explicit ListViewModel(const std::vector<Car>& c) : cars{c} {}
+    explicit ListViewModel(Service &s) : service{s} {}
 
     // returning the number of rows
-    int rowCount(const QModelIndex &parent) const override {
-        return this->cars.size();
+    int rowCount(const QModelIndex &parent = QModelIndex{}) const override {
+        return this->service.getCars().size();
     }
 
     // returning the number of columns
-    int columnCount(const QModelIndex &parent) const override {
+    int columnCount(const QModelIndex &parent = QModelIndex{}) const override {
         return 4;
     }
 
     // interpreting the data
-    QVariant data(const QModelIndex &index, int role) const override {
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
         // will analyze more roles and interpret their data
         int row = index.row();
         int col = index.column();
 
         if(role == Qt::DisplayRole) {
-            if(index.row() < this->cars.size()) {
-                auto item = this->cars.at(index.row());
+            if(index.row() < this->service.getCars().size()) {
+                auto item = this->service.getCars().at(index.row());
                 auto msg = item.getRegNumber() + "\t" + item.getProducer() + "\t" + item.getModel() + "\t" +
                            item.getType();
                 return QString::fromStdString(msg);
@@ -67,5 +67,10 @@ public:
         return QVariant();
     }
 
+    void notifica() {
+        QModelIndex topLeft = createIndex(0, 0);
+        QModelIndex bottomRight = createIndex(rowCount(), columnCount());
+        emit dataChanged(topLeft, bottomRight);
+    }
 
 };

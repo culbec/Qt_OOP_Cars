@@ -163,15 +163,12 @@ void CarGUI::initGUI() {
     this->mainLayout->addWidget(this->listCars);
 
     // list model view
-    auto *lstVi = new QListView();
-    auto *lstMod = new ListViewModel(this->service.getCars());
-    lstVi->setModel(lstMod);
-    this->mainLayout->addWidget(lstVi);
+    this->lstVi->setModel(lstMod);
+    this->mainLayout->addWidget(this->lstVi);
 
     // table model view
-    auto *tblVi = new QTableView();
-    auto *tblMod = new TableViewModel(this->service.getCars());
-    tblVi->setModel(tblMod);
+
+    this->tblVi->setModel(tblMod);
 
     for (auto i = 0; i < headerTable.size(); i++) {
         tblMod->setHeaderData(i, Qt::Horizontal, headerTable[i]);
@@ -211,15 +208,15 @@ void CarGUI::connectSignals_Slots() {
         if (this->radioSortRegNumber->isChecked()) {
             this->reloadTable(Service::sortRegNumber(this->service.getCars()));
             // reupdating the list
-            this->reloadList(this->service.getCars());
+            this->reloadList(Service::sortRegNumber(this->service.getCars()));
         } else if (this->radioSortType->isChecked()) {
             this->reloadTable(Service::sortType(this->service.getCars()));
             // reupdating the list
-            this->reloadList(this->service.getCars());
+            this->reloadList(Service::sortType(this->service.getCars()));
         } else if (this->radioSortProdMod->isChecked()) {
             this->reloadTable(Service::sortProducerModel(this->service.getCars()));
             // reupdating the list
-            this->reloadList(this->service.getCars());
+            this->reloadList(Service::sortProducerModel(this->service.getCars()));
         }
     });
 
@@ -265,6 +262,8 @@ void CarGUI::reloadTable(const vector<Car> &cars) {
                                  new QTableWidgetItem(QString::fromStdString(car.getType())));
         ++lineNumber;
     }
+
+    this->tblMod->notifica();
 }
 
 void CarGUI::reloadList(const vector<Car> &cars) {
@@ -275,6 +274,8 @@ void CarGUI::reloadList(const vector<Car> &cars) {
         auto *item = new QListWidgetItem(QString::fromStdString(str));
         this->listCars->addItem(item);
     }
+
+    this->lstMod->notifica();
 }
 
 void CarGUI::reloadWashingList() {

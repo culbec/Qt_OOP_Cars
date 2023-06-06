@@ -36,13 +36,7 @@ public:
     // definim un constructor explicit
     Service(Repository &rep, WashingList &washL) noexcept: carRepository{rep}, washingList{washL} {}
 
-    // functie care returneaza repo-ul service-ului
-    //const Repository& getRepository() const;
-
     [[nodiscard]] const carList &getCars() const;
-
-    //// functie care returneaza validatorul service-ului
-    //Validator getValidator() const;
 
     /*
         Se adauga o masina in lista de masini.

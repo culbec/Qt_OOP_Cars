@@ -8,25 +8,25 @@
 
 class TableViewModel : public QAbstractTableModel {
 private:
-    const std::vector<Car>& cars;
+    Service& service;
 
 public:
-    explicit TableViewModel(const std::vector<Car> &c): cars{c} {}
+    explicit TableViewModel(Service &s): service{s} {}
 
-    int rowCount(const QModelIndex &parent) const override {
-        return this->cars.size();
+    int rowCount(const QModelIndex &parent = QModelIndex{}) const override {
+        return this->service.getCars().size();
     }
 
-    int columnCount(const QModelIndex &parent) const override {
+    int columnCount(const QModelIndex &parent = QModelIndex{}) const override {
         return 4;
     }
 
-    QVariant data(const QModelIndex &parent, int role) const override {
+    QVariant data(const QModelIndex &parent, int role = Qt::DisplayRole) const override {
         int row = parent.row();
         int col = parent.column();
 
         if(role == Qt::DisplayRole) {
-            auto car = this->cars.at(row);
+            auto car = this->service.getCars().at(row);
             if(col == 0) {
                 return QString::fromStdString(car.getRegNumber());
             } else if (col == 1) {
@@ -59,5 +59,11 @@ public:
                 }
             }
         }
+    }
+
+    void notifica() {
+        QModelIndex topLeft = createIndex(0, 0);
+        QModelIndex bottomRight = createIndex(rowCount(), columnCount());
+        emit dataChanged(topLeft, bottomRight);
     }
 };

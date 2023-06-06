@@ -97,8 +97,15 @@ private:
     QGroupBox *btnsDynamicGB = new QGroupBox("Dynamic Buttons");
     QVBoxLayout *btnsDynamicLay = new QVBoxLayout;
 
-    // list view
+    // list widget
     QListWidget *listCars = new QListWidget;
+
+    // list view
+    QListView *lstVi = new QListView;
+    ListViewModel *lstMod = new ListViewModel(this->service);
+
+    QTableView *tblVi = new QTableView;
+    TableViewModel *tblMod = new TableViewModel(this->service);
 
     // btns for CRUDGUI and ReadOnlyGUI
     QPushButton *btnCRUDGui = new QPushButton("&Wash CRUD GUI");
